@@ -14,9 +14,29 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
+import "./IShareToken.sol";
+
 interface IBaseSilo {
 
     enum AssetStatus { Undefined, Active, Removed }
+
+    /// @dev Storage struct that holds all required data for a single token market
+    struct AssetStorage {
+        /// @dev Token that represents a share in totalDeposits of Silo
+        IShareToken collateralToken;
+        /// @dev Token that represents a share in collateralOnlyDeposits of Silo
+        IShareToken collateralOnlyToken;
+        /// @dev Token that represents a share in totalBorrowAmount of Silo
+        IShareToken debtToken;
+        /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo with interest earned by depositors.
+        /// It also includes token amount that has been borrowed.
+        uint256 totalDeposits;
+        /// @dev COLLATERAL ONLY: Amount of asset token that has been deposited to Silo that can be ONLY used
+        /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
+        uint256 collateralOnlyDeposits;
+        /// @dev DEBT: Amount of asset token that has been borrowed with accrued interest.
+        uint256 totalBorrowAmount;
+    }
 
     /// @dev Storage struct that holds data related to fees and interest
     struct AssetInterestData {

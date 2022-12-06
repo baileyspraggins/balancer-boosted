@@ -32,18 +32,14 @@ interface ISilo is IBaseSilo {
 
     /**
      * @dev Deposits funds into the Silo
-     * @param _collateralOnly TODO: Find out what this means
+     * @param _collateralOnly: True means your shareToken is protected (cannot be swapped for interest)
      */
     function deposit(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable;
 
     /**
      * @dev Withdraws funds from the Silo
-     * @param _collateralOnly TODO: Find out what this means
+     * @param _collateralOnly: True means your shareToken is protected (cannot be swapped for interest)
      */
     function withdraw(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable;
-
-    // Returns interest data. Not sure if this is 100% correct or not.
-    // TODO: Verify the accuracy of this method
-    function interestData(address _asset) external view returns (IBaseSilo.AssetInterestData);
 
 }
