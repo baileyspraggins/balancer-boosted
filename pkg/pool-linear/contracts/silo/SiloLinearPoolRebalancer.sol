@@ -49,10 +49,20 @@ contract SiloLinearPoolRebalancer is LinearPoolRebalancer {
 
     }
 
-    //TODO: Implement exchange rates for silo share tokens
     function _getRequiredTokensToWrap(uint256 wrappedAmount) internal view override returns (uint256) {
-      return 1;
-    }
+        // Get the silo associated with the wrappedToken
+        ISilo silo = ISilo(IShareToken(address(_wrappedToken)).silo());
 
+        // @dev value hardcoding to find the exchange rate for a single _shareToken
+        uint256 singleShare = 1e18;
+        // @dev total amount deposited
+        uint256 totalAmount = silo.assetStorage(_shareToken).totalDeposits;
+        // @dev total number of shares
+        uint256 totalShares = silo.assetStorage(_shareToken).collateralToken;
+        // This is how
+        uint256 rate = toAmount(singleShare, totalAmount, totalShares);
+
+        return rate * wrappedAmount;
+    }
 
 }
