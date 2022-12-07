@@ -18,33 +18,30 @@ import "@balancer-labs/v2-pool-utils/contracts/test/MaliciousQueryReverter.sol";
 
 import "@balancer-labs/v2-solidity-utils/contracts/test/TestToken.sol";
 import "../../../interfaces/contracts/pool-linear/IBaseSilo.sol";
+import "./MockBaseSilo.sol";
 
-contract MockSilo is ISilo {
+contract MockSilo is ISilo, MockBaseSilo {
 
-    /// @dev asset => AssetStorage
-    mapping(address => AssetStorage) private _assetStorage;
-
-    function assetStorage(address _asset) external view override returns (AssetStorage memory) {
-        return _assetStorage;
+    constructor (address _siloAsset)
+        MockBaseSilo(_siloAsset)
+    {
+        // initial setup is done in BaseSilo, nothing to do here
     }
 
-    function setAssetStorage(
-        IShareToken collateralToken,
-        IShareToken collateralOnlyToken,
-        IShareToken debtToken,
-        uint256 totalDeposits,
-        uint256 collateralOnlyDeposits,
-        uint256 totalBorrowAmount) external {
-
-        _assetStorage = AssetStorage(collateralToken, collateralOnlyToken, debtToken, totalDeposits, collateralOnlyDeposits, totalBorrowAmount);
+    function deposit(address _asset, uint256 _amount, bool _collateralOnly)
+    external
+    override
+    returns (uint256 collateralAmount, uint256 collateralShare)
+    {
+        return _deposit(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
     }
 
-    function deposit(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable {
-
-    }
-
-    function withdraw(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable {
-
+    function withdraw(address _asset, uint256 _amount, bool _collateralOnly)
+    external
+    override
+    returns (uint256 withdrawnAmount, uint256 withdrawnShare)
+    {
+        return _withdraw(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
     }
 
 }

@@ -40,8 +40,6 @@ contract SiloLinearPoolRebalancer is LinearPoolRebalancer {
         _mainToken.safeApprove(address(_wrappedToken), amount);
         ISilo(address(_wrappedToken)).deposit(address(this), amount, false);
 
-        // Maybe this function if our entry point is the shareToken
-        //IShareToken(address(_wrappedToken)).mint(address(this), amount);
     }
 
     function _unwrapTokens(uint256 amount) internal override {
@@ -49,8 +47,6 @@ contract SiloLinearPoolRebalancer is LinearPoolRebalancer {
         // as the wrapped token is simply burnt.
         ISilo(address(_wrappedToken)).withdraw(address(this), amount, false);
 
-        // Maybe this function if our entry point is the shareToken
-        //IShareToken(address(_wrappedToken)).mint(address(this), amount);
     }
 
     //TODO: Implement exchange rates for silo share tokens

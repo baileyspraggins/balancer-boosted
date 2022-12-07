@@ -25,6 +25,11 @@ interface IShareToken is IERC20Metadata {
     function asset() external view returns (address);
 
     /**
+      * @dev returns the address of the silo
+    */
+    function silo() external view returns (ISilo);
+
+    /**
       * @dev returns the number of decimals for the token
       * @dev shareTokens will always have the same number of decimals as their underlying asset
     */
@@ -43,7 +48,5 @@ interface IShareToken is IERC20Metadata {
      * @param _amount: How many sTokens to burn
     */
     function burn(address _account, uint256 _amount) external nonpayable;
-
-    function silo() external view returns (ISilo);
 
 }

@@ -19,27 +19,16 @@ import "./IBaseSilo.sol";
 
 interface ISilo is IBaseSilo {
 
-//    /**
-//     * @dev returns the address of the silos asset (underlying/main token)
-//     */
-//    function siloAsset() external view returns (address);
-//
-//    /**
-//     * @dev returns the assets decimal points
-//     * @dev TODO: Find out how many fixed decimal points function returns
-//     */
-//    function ASSET_DECIMAL_POINTS() external view returns (uint256);
-
     /**
      * @dev Deposits funds into the Silo
      * @param _collateralOnly: True means your shareToken is protected (cannot be swapped for interest)
      */
-    function deposit(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable;
+    function deposit(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable returns (uint256 collateralAmount, uint256 collateralShare);
 
     /**
      * @dev Withdraws funds from the Silo
      * @param _collateralOnly: True means your shareToken is protected (cannot be swapped for interest)
      */
-    function withdraw(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable;
+    function withdraw(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable returns (uint256 withdrawnAmount, uint256 withdrawnShare);
 
 }
