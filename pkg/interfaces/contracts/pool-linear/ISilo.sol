@@ -19,16 +19,16 @@ import "./IBaseSilo.sol";
 
 interface ISilo is IBaseSilo {
 
-    /**
-     * @dev returns the address of the silos asset (underlying/main token)
-     */
-    function siloAsset() external view returns (address);
-
-    /**
-     * @dev returns the assets decimal points
-     * @dev TODO: Find out how many fixed decimal points function returns
-     */
-    function ASSET_DECIMAL_POINTS() external view returns (uint256);
+//    /**
+//     * @dev returns the address of the silos asset (underlying/main token)
+//     */
+//    function siloAsset() external view returns (address);
+//
+//    /**
+//     * @dev returns the assets decimal points
+//     * @dev TODO: Find out how many fixed decimal points function returns
+//     */
+//    function ASSET_DECIMAL_POINTS() external view returns (uint256);
 
     /**
      * @dev Deposits funds into the Silo

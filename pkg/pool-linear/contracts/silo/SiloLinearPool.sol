@@ -23,6 +23,7 @@ import "../LinearPool.sol";
 
 contract SiloLinearPool is LinearPool, Version {
     ISilo private immutable _silo;
+    IShareToken private immutable _shareToken;
 
     struct ConstructorArgs {
         IVault vault;
@@ -55,9 +56,9 @@ contract SiloLinearPool is LinearPool, Version {
         )
         Version(args.version)
     {
-
-        _silo = ISilo(address(args.wrappedToken));
-        _require(address(args.mainToken) == ISilo(address(args.wrappedToken)).siloAsset(), Errors.TOKENS_MISMATCH);
+        _silo = ISilo(IShareToken(address(_wrappedToken)).silo());
+        _shareToken = IShareToken(address(args.wrappedToken));
+        _require(address(args.mainToken) == _shareToken.asset(), Errors.TOKENS_MISMATCH);
     }
 
     function _toAssetManagerArray(ConstructorArgs memory args) private pure returns (address[] memory) {
@@ -70,28 +71,16 @@ contract SiloLinearPool is LinearPool, Version {
     }
 
     function _getWrappedTokenRate() internal view override returns (uint256) {
-
-
-        // Using protocol fees for the interest rate as of now
-        return rateData.protocolFees;
-    }
-
-    function GetShareTokenExchangeRate(address _shareToken) internal pure returns (uint256) {
-
         // @dev value hardcoding to find the exchange rate for a single _shareToken
         uint256 singleShare = 1e18;
-
-        // TODO: Need to add mapping of assetStorage to interface
         // @dev total amount deposited
-        uint256 totalAmount = _silo._assetStorage[_shareToken].totalDeposits;
-
+        uint256 totalAmount = _silo.assetStorage(_shareToken).totalDeposits;
         // @dev total number of shares
-        uint256 totalShares = _silo._assetStorage[_shareToken].collateralToken;
-
+        uint256 totalShares = _silo.assetStorage(_shareToken).collateralToken;
         // This is how
         uint256 rate = toAmount(singleShare, totalAmount, totalShares);
 
         return rate;
-
     }
+
 }

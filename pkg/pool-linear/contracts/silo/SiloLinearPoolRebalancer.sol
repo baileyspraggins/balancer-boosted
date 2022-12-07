@@ -39,21 +39,23 @@ contract SiloLinearPoolRebalancer is LinearPoolRebalancer {
         // deposit however, we need to approve the wrapper in the underlying token.
         _mainToken.safeApprove(address(_wrappedToken), amount);
         ISilo(address(_wrappedToken)).deposit(address(this), amount, false);
+
+        // Maybe this function if our entry point is the shareToken
+        //IShareToken(address(_wrappedToken)).mint(address(this), amount);
     }
 
     function _unwrapTokens(uint256 amount) internal override {
         // Withdrawing into underlying (i.e. DAI, USDC, etc. instead of sDAI or sUSDC). Approvals are not necessary here
         // as the wrapped token is simply burnt.
         ISilo(address(_wrappedToken)).withdraw(address(this), amount, false);
+
+        // Maybe this function if our entry point is the shareToken
+        //IShareToken(address(_wrappedToken)).mint(address(this), amount);
     }
 
     //TODO: Implement exchange rates for silo share tokens
     function _getRequiredTokensToWrap(uint256 wrappedAmount) internal view override returns (uint256) {
-        // staticToDynamic returns how many main tokens will be returned when unwrapping. Since there's fixed point
-        // divisions and multiplications with rounding involved, this value might be off by one. We add one to ensure
-        // the returned value will always be enough to get `wrappedAmount` when unwrapping. This might result in some
-        // dust being left in the Rebalancer.
-        return IStaticAToken(address(_wrappedToken)).staticToDynamicAmount(wrappedAmount) + 1;
+      return 1;
     }
 
 

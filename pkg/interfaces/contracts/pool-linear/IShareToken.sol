@@ -19,12 +19,29 @@ import "./ISilo.sol";
 
 interface IShareToken is IERC20Metadata {
 
+    /**
+     * @dev returns the underlying asset
+    */
     function asset() external view returns (address);
 
+    /**
+      * @dev returns the number of decimals for the token
+      * @dev shareTokens will always have the same number of decimals as their underlying asset
+    */
     function decimals() external view returns (uint8);
 
+    /**
+     * @dev Mint sToken to wallet
+     * @param _account: wallet which tokens will mint to
+     * @param _amount: How many sTokens to mint
+    */
     function mint(address _account, uint256 _amount) external nonpayable;
 
+    /**
+     * @dev Mint sToken to wallet
+     * @param _account: wallet which to burn sTokens from
+     * @param _amount: How many sTokens to burn
+    */
     function burn(address _account, uint256 _amount) external nonpayable;
 
     function silo() external view returns (ISilo);

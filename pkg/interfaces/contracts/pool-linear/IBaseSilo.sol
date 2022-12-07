@@ -18,8 +18,6 @@ import "./IShareToken.sol";
 
 interface IBaseSilo {
 
-    enum AssetStatus { Undefined, Active, Removed }
-
     /// @dev Storage struct that holds all required data for a single token market
     struct AssetStorage {
         /// @dev Token that represents a share in totalDeposits of Silo
@@ -38,17 +36,9 @@ interface IBaseSilo {
         uint256 totalBorrowAmount;
     }
 
-    /// @dev Storage struct that holds data related to fees and interest
-    struct AssetInterestData {
-        /// @dev Total amount of already harvested protocol fees
-        uint256 harvestedProtocolFees;
-        /// @dev Total amount (ever growing) of asset token that has been earned by the protocol from
-        /// generated interest.
-        uint256 protocolFees;
-        /// @dev Timestamp of the last time `interestRate` has been updated in storage.
-        uint64 interestRateTimestamp;
-        /// @dev True if asset was removed from the protocol. If so, deposit and borrow functions are disabled
-        /// for that asset
-        AssetStatus status;
-    }
+    /**
+     * @dev returns the asset storage struct
+     * @dev AssetStorage struct contains necessary information for calculating shareToken exchange rates
+     */
+    function assetStorage(address _asset) external view virtual returns (AssetStorage memory);
 }
