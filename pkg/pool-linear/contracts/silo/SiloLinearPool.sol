@@ -18,7 +18,9 @@ pragma experimental ABIEncoderV2;
 import "@balancer-labs/v2-interfaces/contracts/pool-linear/ISilo.sol";
 import "@balancer-labs/v2-pool-utils/contracts/lib/ExternalCallLib.sol";
 import "@balancer-labs/v2-pool-utils/contracts/Version.sol";
+import "@balancer-labs/v2-interfaces/contracts/pool-linear/IShareToken.sol";
 
+import "./SiloHelpers.sol";
 import "../LinearPool.sol";
 
 contract SiloLinearPool is LinearPool, Version {
@@ -40,7 +42,9 @@ contract SiloLinearPool is LinearPool, Version {
         string version;
     }
 
-    constructor(ConstructorArgs memory args)
+    constructor(
+        ConstructorArgs memory args
+    )
         LinearPool(
             args.vault,
             args.name,
@@ -56,9 +60,9 @@ contract SiloLinearPool is LinearPool, Version {
         )
         Version(args.version)
     {
-        _silo = ISilo(IShareToken(address(_wrappedToken)).silo());
         _shareToken = IShareToken(address(args.wrappedToken));
-        _require(address(args.mainToken) == _shareToken.asset(), Errors.TOKENS_MISMATCH);
+        _silo = ISilo(IShareToken(address(args.wrappedToken)).silo());
+        _require(address(args.mainToken) == IShareToken(address(args.wrappedToken)).asset(), Errors.TOKENS_MISMATCH);
     }
 
     function _toAssetManagerArray(ConstructorArgs memory args) private pure returns (address[] memory) {
@@ -74,13 +78,12 @@ contract SiloLinearPool is LinearPool, Version {
         // @dev value hardcoding to find the exchange rate for a single _shareToken
         uint256 singleShare = 1e18;
         // @dev total amount deposited
-        uint256 totalAmount = _silo.assetStorage(_shareToken).totalDeposits;
+        uint256 totalAmount = _silo.assetStorage(_shareToken.asset()).totalDeposits;
         // @dev total number of shares
-        uint256 totalShares = _silo.assetStorage(_shareToken).collateralToken;
+        uint256 totalShares = _shareToken.totalSupply();
         // This is how
-        uint256 rate = toAmount(singleShare, totalAmount, totalShares);
+        uint256 rate = SiloHelpers.toAmount(singleShare, totalAmount, totalShares);
 
         return rate;
     }
-
 }

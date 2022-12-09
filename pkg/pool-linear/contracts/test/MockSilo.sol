@@ -17,31 +17,29 @@ pragma solidity ^0.7.0;
 import "@balancer-labs/v2-pool-utils/contracts/test/MaliciousQueryReverter.sol";
 
 import "@balancer-labs/v2-solidity-utils/contracts/test/TestToken.sol";
-import "../../../interfaces/contracts/pool-linear/IBaseSilo.sol";
+import "@balancer-labs/v2-interfaces/contracts/pool-linear/ISilo.sol";
 import "./MockBaseSilo.sol";
 
 contract MockSilo is ISilo, MockBaseSilo {
-
-    constructor (address _siloAsset)
-        MockBaseSilo(_siloAsset)
-    {
+    constructor(address _siloAsset) MockBaseSilo(_siloAsset) {
         // initial setup is done in BaseSilo, nothing to do here
     }
 
-    function deposit(address _asset, uint256 _amount, bool _collateralOnly)
-    external
-    override
-    returns (uint256 collateralAmount, uint256 collateralShare)
-    {
-        return _deposit(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
+    function deposit(
+        address _asset,
+        uint256 _amount,
+        bool _collateralOnly
+    ) external pure override returns (uint256 collateralAmount, uint256 collateralShare) {
+        // return MockBaseSilo._deposit(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
+        return (0, 0);
     }
 
-    function withdraw(address _asset, uint256 _amount, bool _collateralOnly)
-    external
-    override
-    returns (uint256 withdrawnAmount, uint256 withdrawnShare)
-    {
-        return _withdraw(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
+    function withdraw(
+        address _asset,
+        uint256 _amount,
+        bool _collateralOnly
+    ) external pure override returns (uint256 withdrawnAmount, uint256 withdrawnShare) {
+        // return _withdraw(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
+        return (0, 0);
     }
-
 }

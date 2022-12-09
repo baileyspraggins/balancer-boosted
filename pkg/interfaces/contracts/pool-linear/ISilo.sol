@@ -13,9 +13,36 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 pragma solidity >=0.7.0 <0.9.0;
+pragma experimental ABIEncoderV2;
 
-import "../solidity-utils/openzeppelin/IERC20.sol";
-import "./IBaseSilo.sol";
+import "./IShareToken.sol";
+
+interface IBaseSilo {
+
+    /// Storage struct that holds all required data for a single token market
+    struct AssetStorage {
+        // Token that represents a share in totalDeposits of Silo
+        IShareToken collateralToken;
+        // Token that represents a share in collateralOnlyDeposits of Silo
+        IShareToken collateralOnlyToken;
+        // Token that represents a share in totalBorrowAmount of Silo
+        IShareToken debtToken;
+        // COLLATERAL: Amount of asset token that has been deposited to Silo with interest earned by depositors.
+        // It also includes token amount that has been borrowed.
+        uint256 totalDeposits;
+        // COLLATERAL ONLY: Amount of asset token that has been deposited to Silo that can be ONLY used
+        // as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
+        uint256 collateralOnlyDeposits;
+        // DEBT: Amount of asset token that has been borrowed with accrued interest.
+        uint256 totalBorrowAmount;
+    }
+
+    /**
+     * @dev returns the asset storage struct
+     * @dev AssetStorage struct contains necessary information for calculating shareToken exchange rates
+     */
+    function assetStorage(address _asset) external view returns (AssetStorage memory);
+}
 
 interface ISilo is IBaseSilo {
 
@@ -23,12 +50,12 @@ interface ISilo is IBaseSilo {
      * @dev Deposits funds into the Silo
      * @param _collateralOnly: True means your shareToken is protected (cannot be swapped for interest)
      */
-    function deposit(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable returns (uint256 collateralAmount, uint256 collateralShare);
+    function deposit(address _asset, uint256 _amount, bool _collateralOnly) external returns (uint256 collateralAmount, uint256 collateralShare);
 
     /**
      * @dev Withdraws funds from the Silo
      * @param _collateralOnly: True means your shareToken is protected (cannot be swapped for interest)
      */
-    function withdraw(address _asset, uint256 _amount, bool _collateralOnly) external nonpayable returns (uint256 withdrawnAmount, uint256 withdrawnShare);
+    function withdraw(address _asset, uint256 _amount, bool _collateralOnly) external returns (uint256 withdrawnAmount, uint256 withdrawnShare);
 
 }
