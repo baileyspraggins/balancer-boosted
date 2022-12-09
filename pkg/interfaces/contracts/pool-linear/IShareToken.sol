@@ -27,4 +27,14 @@ interface IShareToken is IERC20Metadata {
      * @dev returns the address of the silo
      */
     function silo() external view returns (ISilo);
+
+    /**
+     * @dev Function called wehn depositing shareTokens
+     */
+    function mint(address _account, uint256 _amount) external;
+
+    /**
+     * @dev Function called when withdrawing shareTokens
+     */
+    function burn(address _account, uint256 _amount) external;
 }

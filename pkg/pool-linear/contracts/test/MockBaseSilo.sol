@@ -17,6 +17,7 @@ pragma experimental ABIEncoderV2;
 
 import "@balancer-labs/v2-pool-utils/contracts/test/MaliciousQueryReverter.sol";
 import "@balancer-labs/v2-interfaces/contracts/pool-linear/IShareToken.sol";
+import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ERC20.sol";
 import "../silo/SiloHelpers.sol";
 import "@balancer-labs/v2-interfaces/contracts/pool-linear/ISilo.sol";
 
@@ -64,117 +65,124 @@ contract MockBaseSilo is IBaseSilo {
         _assetStorage[interestBarringAsset] = storageValue;
     }
 
-    // function _deposit(
-    //     address _asset,
-    //     address _from,
-    //     address _depositor,
-    //     uint256 _amount,
-    //     bool _collateralOnly
-    // ) internal returns (uint256 collateralAmount, uint256 collateralShare) {
-    //     AssetStorage storage _state = _assetStorage[_asset];
+    function _deposit(
+        address _asset,
+        address _from,
+        address _depositor,
+        uint256 _amount,
+        bool _collateralOnly
+    ) internal returns (uint256 collateralAmount, uint256 collateralShare) {
+        AssetStorage storage _state = _assetStorage[_asset];
 
-    //     collateralAmount = _amount;
+        collateralAmount = _amount;
 
-    //     uint256 totalDepositsCached = _collateralOnly ? _state.collateralOnlyDeposits : _state.totalDeposits;
+        uint256 totalDepositsCached = _collateralOnly ? _state.collateralOnlyDeposits : _state.totalDeposits;
 
-    //     if (_collateralOnly) {
-    //         collateralShare = SiloHelpers.toShare(
-    //             _amount,
-    //             totalDepositsCached,
-    //             _state.collateralOnlyToken.totalSupply()
-    //         );
-    //         _state.collateralOnlyDeposits = totalDepositsCached + _amount;
-    //         _state.collateralOnlyToken.mint(_depositor, collateralShare);
-    //     } else {
-    //         collateralShare = SiloHelpers.toShare(_amount, totalDepositsCached, _state.collateralToken.totalSupply());
-    //         _state.totalDeposits = totalDepositsCached + _amount;
-    //         _state.collateralToken.mint(_depositor, collateralShare);
-    //     }
-    // }
+        if (_collateralOnly) {
+            collateralShare = SiloHelpers.toShare(
+                _amount,
+                totalDepositsCached,
+                _state.collateralOnlyToken.totalSupply()
+            );
+            _state.collateralOnlyDeposits = totalDepositsCached + _amount;
+            _state.collateralOnlyToken.mint(_depositor, collateralShare);
+        } else {
+            collateralShare = SiloHelpers.toShare(_amount, totalDepositsCached, _state.collateralToken.totalSupply());
+            _state.totalDeposits = totalDepositsCached + _amount;
+            _state.collateralToken.mint(_depositor, collateralShare);
+        }
 
-    // function _withdraw(
-    //     address _asset,
-    //     address _depositor,
-    //     address _receiver,
-    //     uint256 _amount,
-    //     bool _collateralOnly
-    // ) internal returns (uint256 withdrawnAmount, uint256 withdrawnShare) {
-    //     (withdrawnAmount, withdrawnShare) = _withdrawAsset(
-    //         _asset,
-    //         _amount,
-    //         _depositor,
-    //         _receiver,
-    //         _collateralOnly,
-    //         0 // do not apply any fees on regular withdraw
-    //     );
-    // }
+        ERC20(_asset).transferFrom(_from, address(this), _amount);
+    }
 
-    // function _withdrawAsset(
-    //     address _asset,
-    //     uint256 _assetAmount,
-    //     address _depositor,
-    //     address _receiver,
-    //     bool _collateralOnly,
-    //     uint256 _protocolLiquidationFee
-    // ) internal returns (uint256 withdrawnAmount, uint256 burnedShare) {
-    //     (uint256 assetTotalDeposits, IShareToken shareToken, uint256 availableLiquidity) = _getWithdrawAssetData(
-    //         _asset,
-    //         _collateralOnly
-    //     );
+    function _withdraw(
+        address _asset,
+        address _depositor,
+        address _receiver,
+        uint256 _amount,
+        bool _collateralOnly
+    ) internal returns (uint256 withdrawnAmount, uint256 withdrawnShare) {
+        (withdrawnAmount, withdrawnShare) = _withdrawAsset(
+            _asset,
+            _amount,
+            _depositor,
+            _receiver,
+            _collateralOnly,
+            0 // do not apply any fees on regular withdraw
+        );
+    }
 
-    //     if (_assetAmount == type(uint256).max) {
-    //         burnedShare = shareToken.balanceOf(_depositor);
-    //         withdrawnAmount = SiloHelpers.toAmount(burnedShare, assetTotalDeposits, shareToken.totalSupply());
-    //     } else {
-    //         burnedShare = SiloHelpers.toShareRoundUp(_assetAmount, assetTotalDeposits, shareToken.totalSupply());
-    //         withdrawnAmount = _assetAmount;
-    //     }
+    function _withdrawAsset(
+        address _asset,
+        uint256 _assetAmount,
+        address _depositor,
+        address _receiver,
+        bool _collateralOnly,
+        uint256 _protocolLiquidationFee
+    ) internal returns (uint256 withdrawnAmount, uint256 burnedShare) {
+        (uint256 assetTotalDeposits, IShareToken shareToken, uint256 availableLiquidity) = _getWithdrawAssetData(
+            _asset,
+            _collateralOnly
+        );
 
-    //     if (withdrawnAmount == 0) {
-    //         // we can not revert here, because liquidation will fail when one of collaterals will be empty
-    //         return (0, 0);
-    //     }
+        // Creating this statement so we can use the input parameter but it is unimportant for our local testing
+        if (_protocolLiquidationFee > 100000000000) {
+            revert("Too Large of a liquidation fee");
+        }
 
-    //     if (assetTotalDeposits < withdrawnAmount) revert("NotEnoughDeposits");
+        if (_assetAmount == type(uint256).max) {
+            burnedShare = shareToken.balanceOf(_depositor);
+            withdrawnAmount = SiloHelpers.toAmount(burnedShare, assetTotalDeposits, shareToken.totalSupply());
+        } else {
+            burnedShare = SiloHelpers.toShareRoundUp(_assetAmount, assetTotalDeposits, shareToken.totalSupply());
+            withdrawnAmount = _assetAmount;
+        }
 
-    //     // Wrapped with unchecked in source code
-    //     assetTotalDeposits -= withdrawnAmount;
+        if (withdrawnAmount == 0) {
+            // we can not revert here, because liquidation will fail when one of collaterals will be empty
+            return (0, 0);
+        }
 
-    //     uint256 amountToTransfer = withdrawnAmount;
+        if (assetTotalDeposits < withdrawnAmount) revert("NotEnoughDeposits");
 
-    //     if (availableLiquidity < amountToTransfer) revert("NotEnoughLiquidity");
+        // Wrapped with unchecked in source code
+        assetTotalDeposits -= withdrawnAmount;
 
-    //     AssetStorage storage _state = _assetStorage[_asset];
+        uint256 amountToTransfer = withdrawnAmount;
 
-    //     if (_collateralOnly) {
-    //         _state.collateralOnlyDeposits = assetTotalDeposits;
-    //     } else {
-    //         _state.totalDeposits = assetTotalDeposits;
-    //     }
+        if (availableLiquidity < amountToTransfer) revert("NotEnoughLiquidity");
 
-    //     shareToken.burn(_depositor, burnedShare);
-    //     // in case token sent in fee-on-transfer type of token we do not care when withdrawing
-    //     IERC20(_asset).transfer(_receiver, amountToTransfer);
-    // }
+        AssetStorage storage _state = _assetStorage[_asset];
 
-    // function _getWithdrawAssetData(
-    //     address _asset,
-    //     bool _collateralOnly
-    // ) private view returns (uint256 assetTotalDeposits, IShareToken shareToken, uint256 availableLiquidity) {
-    //     AssetStorage storage _state = _assetStorage[_asset];
+        if (_collateralOnly) {
+            _state.collateralOnlyDeposits = assetTotalDeposits;
+        } else {
+            _state.totalDeposits = assetTotalDeposits;
+        }
 
-    //     if (_collateralOnly) {
-    //         assetTotalDeposits = _state.collateralOnlyDeposits;
-    //         shareToken = _state.collateralOnlyToken;
-    //         availableLiquidity = assetTotalDeposits;
-    //     } else {
-    //         assetTotalDeposits = _state.totalDeposits;
-    //         shareToken = _state.collateralToken;
-    //         availableLiquidity = liquidity(_asset);
-    //     }
-    // }
+        shareToken.burn(_depositor, burnedShare);
+        // in case token sent in fee-on-transfer type of token we do not care when withdrawing
+        IERC20(_asset).transfer(_receiver, amountToTransfer);
+    }
 
-    // function liquidity(address _asset) public view returns (uint256) {
-    //     return IERC20(_asset).balanceOf(address(this)) - _assetStorage[_asset].collateralOnlyDeposits;
-    // }
+    function _getWithdrawAssetData(
+        address _asset,
+        bool _collateralOnly
+    ) private view returns (uint256 assetTotalDeposits, IShareToken shareToken, uint256 availableLiquidity) {
+        AssetStorage storage _state = _assetStorage[_asset];
+
+        if (_collateralOnly) {
+            assetTotalDeposits = _state.collateralOnlyDeposits;
+            shareToken = _state.collateralOnlyToken;
+            availableLiquidity = assetTotalDeposits;
+        } else {
+            assetTotalDeposits = _state.totalDeposits;
+            shareToken = _state.collateralToken;
+            availableLiquidity = liquidity(_asset);
+        }
+    }
+
+    function liquidity(address _asset) public view returns (uint256) {
+        return IERC20(_asset).balanceOf(address(this)) - _assetStorage[_asset].collateralOnlyDeposits;
+    }
 }

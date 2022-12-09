@@ -13,6 +13,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 pragma solidity ^0.7.0;
+pragma experimental ABIEncoderV2;
 
 import "@balancer-labs/v2-pool-utils/contracts/test/MaliciousQueryReverter.sol";
 
@@ -29,17 +30,15 @@ contract MockSilo is ISilo, MockBaseSilo {
         address _asset,
         uint256 _amount,
         bool _collateralOnly
-    ) external pure override returns (uint256 collateralAmount, uint256 collateralShare) {
-        // return MockBaseSilo._deposit(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
-        return (0, 0);
+    ) external override returns (uint256 collateralAmount, uint256 collateralShare) {
+        return MockBaseSilo._deposit(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
     }
 
     function withdraw(
         address _asset,
         uint256 _amount,
         bool _collateralOnly
-    ) external pure override returns (uint256 withdrawnAmount, uint256 withdrawnShare) {
-        // return _withdraw(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
-        return (0, 0);
+    ) external override returns (uint256 withdrawnAmount, uint256 withdrawnShare) {
+        return _withdraw(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
     }
 }
