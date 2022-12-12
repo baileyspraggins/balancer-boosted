@@ -27,18 +27,18 @@ contract MockSilo is ISilo, MockBaseSilo {
     }
 
     function deposit(
-        address _asset,
-        uint256 _amount,
-        bool _collateralOnly
-    ) external override returns (uint256 collateralAmount, uint256 collateralShare) {
-        return MockBaseSilo._deposit(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
+        address /*_asset*/,
+        uint256 /*_amount*/,
+        bool /*_collateralOnly*/
+    ) external override pure returns (uint256 collateralAmount, uint256 collateralShare) {
+        return (0,0);
     }
 
     function withdraw(
-        address _asset,
-        uint256 _amount,
-        bool _collateralOnly
-    ) external override returns (uint256 withdrawnAmount, uint256 withdrawnShare) {
-        return _withdraw(_asset, msg.sender, msg.sender, _amount, _collateralOnly);
+        address /*_asset*/,
+        uint256 /*_amount*/,
+        bool /*_collateralOnly*/
+    ) external override pure returns (uint256 withdrawnAmount, uint256 withdrawnShare) {
+        return (0,0);
     }
 }

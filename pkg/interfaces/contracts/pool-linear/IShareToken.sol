@@ -17,7 +17,7 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./ISilo.sol";
 import "../solidity-utils/openzeppelin/IERC20Metadata.sol";
 
-interface IShareToken is IERC20Metadata {
+interface IShareToken {
     /**
      * @dev returns the underlying asset
      */
@@ -28,13 +28,14 @@ interface IShareToken is IERC20Metadata {
      */
     function silo() external view returns (ISilo);
 
-    /**
-     * @dev Function called wehn depositing shareTokens
-     */
-    function mint(address _account, uint256 _amount) external;
-
-    /**
-     * @dev Function called when withdrawing shareTokens
-     */
-    function burn(address _account, uint256 _amount) external;
+    function totalSupply() external view returns (uint256);
+//    /**
+//     * @dev Function called when depositing shareTokens
+//     */
+//    function mint(address _account, uint256 _amount) external;
+//
+//    /**
+//     * @dev Function called when withdrawing shareTokens
+//     */
+//    function burn(address _account, uint256 _amount) external;
 }
