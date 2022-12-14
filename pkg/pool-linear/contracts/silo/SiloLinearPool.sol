@@ -75,13 +75,14 @@ contract SiloLinearPool is LinearPool, Version {
     }
 
     function _getWrappedTokenRate() internal view override returns (uint256) {
-        // @dev value hardcoding to find the exchange rate for a single _shareToken
+        // @dev value hardcoded to find the exchange rate for a single _shareToken
         uint256 singleShare = 1e18;
         // @dev total amount deposited
         uint256 totalAmount = _silo.assetStorage(_shareToken.asset()).totalDeposits;
         // @dev total number of shares
         uint256 totalShares = _shareToken.totalSupply();
-        // This is how
+        // @dev toAmount function is what silo uses to calculate exchange rates during withdraw period
+        // The protocol currently does not expose an exchange rate function
         uint256 rate = SiloHelpers.toAmount(singleShare, totalAmount, totalShares);
 
         return rate;
