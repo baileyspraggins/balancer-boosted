@@ -17,7 +17,7 @@ import "@balancer-labs/v2-interfaces/contracts/pool-linear/ISilo.sol";
 import "@balancer-labs/v2-interfaces/contracts/pool-linear/IShareToken.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/test/TestToken.sol";
 
-contract ShareToken is TestToken, IShareToken {
+contract MockShareToken is TestToken, IShareToken {
 
     ISilo private immutable _silo;
     address private immutable _asset;

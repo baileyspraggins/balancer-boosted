@@ -11,18 +11,22 @@ import { deploy, deployedAt } from '@balancer-labs/v2-helpers/src/contract';
 import { MAX_UINT112 } from '@balancer-labs/v2-helpers/src/constants';
 import { advanceTime, currentTimestamp, MONTH } from '@balancer-labs/v2-helpers/src/time';
 import Token from '@balancer-labs/v2-helpers/src/models/tokens/Token';
+import {sharedBeforeEach} from "@balancer-labs/v2-common/sharedBeforeEach";
+
 
 describe('SiloLinearPoolFactory', function () {
   let vault: Vault, tokens: TokenList, factory: Contract;
+  let mainToken: Token, wrappedToken: Token;
   let creationTime: BigNumber, owner: SignerWithAddress;
-  let factoryVersion: string, poolVersion: string;
 
   const NAME = 'Balancer Linear Pool Token';
-  const SYMBOL = 'LPT';
+  const SYMBOL = 'BPT';
   const UPPER_TARGET = fp(2000);
   const POOL_SWAP_FEE_PERCENTAGE = fp(0.01);
   const BASE_PAUSE_WINDOW_DURATION = MONTH * 3;
   const BASE_BUFFER_PERIOD_DURATION = MONTH;
+  const factoryVersion = '1.0';
+  const poolVersion = '1.0';
 
   before('setup signers', async () => {
     [, owner] = await ethers.getSigners();
@@ -30,49 +34,44 @@ describe('SiloLinearPoolFactory', function () {
 
   sharedBeforeEach('deploy factory & tokens', async () => {
     vault = await Vault.create();
+
     const queries = await deploy('v2-standalone-utils/BalancerQueries', { args: [vault.address] });
-    factoryVersion = JSON.stringify({
-      name: 'SiloLinearPoolFactory',
-      version: '3',
-      deployment: 'test-deployment',
-    });
-    poolVersion = JSON.stringify({
-      name: 'SiloLinearPool',
-      version: '1',
-      deployment: 'test-deployment',
-    });
+
     factory = await deploy('SiloLinearPoolFactory', {
       args: [vault.address, vault.getFeesProvider().address, queries.address, factoryVersion, poolVersion],
     });
     creationTime = await currentTimestamp();
 
-    const mockLendingPool = await deploy('MockSiloLendingPool');
+    mainToken = await Token.create({symbol: 'USDC', decimals: 6});
 
-    const mainToken = await Token.create('USDC');
-    const wrappedTokenInstance = await deploy('MockShareToken', {
-      args: ['sUSDC', 'sUSDC', 18, mainToken.address, mockLendingPool.address],
+    const mockLendingPool = await deploy('MockSilo', {
+      args: [mainToken.address],
     });
-    const wrappedToken = await Token.deployedAt(wrappedTokenInstance.address);
+
+    const wrappedTokenInstance = await deploy('MockShareToken', {
+      args: ['sUSDC', 'sUSDC', mockLendingPool.address, mainToken.address, 6],
+    });
+
+    wrappedToken = await Token.deployedAt(wrappedTokenInstance.address);
 
     tokens = new TokenList([mainToken, wrappedToken]).sort();
   });
 
   async function createPool(): Promise<Contract> {
     const receipt = await factory.create(
-      NAME,
-      SYMBOL,
-      tokens.DAI.address,
-      tokens.CDAI.address,
-      UPPER_TARGET,
-      POOL_SWAP_FEE_PERCENTAGE,
-      owner.address
+        NAME,
+        SYMBOL,
+        mainToken.instance.address,
+        wrappedToken.instance.address,
+        UPPER_TARGET,
+        POOL_SWAP_FEE_PERCENTAGE,
+        owner.address
     );
-
     const event = expectEvent.inReceipt(await receipt.wait(), 'PoolCreated');
-    return deployedAt('SiloLinearPool', event.args.pool);
+    return deployedAt('LinearPool', event.args.pool);
   }
 
-  describe('constructor arguments', () => {
+  describe('constructor arguments',async () => {
     let pool: Contract;
 
     sharedBeforeEach('create pool', async () => {
@@ -87,10 +86,6 @@ describe('SiloLinearPoolFactory', function () {
       expect(await factory.version()).to.equal(factoryVersion);
     });
 
-    it('checks the pool version', async () => {
-      expect(await pool.version()).to.equal(poolVersion);
-    });
-
     it('checks the pool version in the factory', async () => {
       expect(await factory.getPoolVersion()).to.equal(poolVersion);
     });
@@ -100,8 +95,8 @@ describe('SiloLinearPoolFactory', function () {
       const poolTokens = await vault.getPoolTokens(poolId);
 
       expect(poolTokens.tokens).to.have.lengthOf(3);
-      expect(poolTokens.tokens).to.include(tokens.DAI.address);
-      expect(poolTokens.tokens).to.include(tokens.CDAI.address);
+      expect(poolTokens.tokens).to.include(mainToken.address);
+      expect(poolTokens.tokens).to.include(wrappedToken.address);
       expect(poolTokens.tokens).to.include(pool.address);
 
       poolTokens.tokens.forEach((token, i) => {
@@ -115,7 +110,7 @@ describe('SiloLinearPoolFactory', function () {
 
     it('sets a rebalancer as the asset manager', async () => {
       const poolId = await pool.getPoolId();
-      // We only check the first token, but this will be the asset manager for both main and wrapped
+
       const { assetManager } = await vault.getPoolTokenInfo(poolId, tokens.first);
 
       const rebalancer = await deployedAt('SiloLinearPoolRebalancer', assetManager);
@@ -144,11 +139,11 @@ describe('SiloLinearPoolFactory', function () {
     });
 
     it('sets main token', async () => {
-      expect(await pool.getMainToken()).to.equal(tokens.DAI.address);
+      expect(await pool.getMainToken()).to.equal(mainToken.address);
     });
 
     it('sets wrapped token', async () => {
-      expect(await pool.getWrappedToken()).to.equal(tokens.CDAI.address);
+      expect(await pool.getWrappedToken()).to.equal(wrappedToken.address);
     });
 
     it('sets the targets', async () => {
@@ -157,7 +152,6 @@ describe('SiloLinearPoolFactory', function () {
       expect(targets.upperTarget).to.be.equal(UPPER_TARGET);
     });
   });
-
   describe('with a created pool', () => {
     let pool: Contract;
 
@@ -202,4 +196,4 @@ describe('SiloLinearPoolFactory', function () {
       expect(bufferPeriodEndTime).to.equal(now);
     });
   });
-});
+})
