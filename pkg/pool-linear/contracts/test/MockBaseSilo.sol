@@ -20,6 +20,7 @@ import "@balancer-labs/v2-interfaces/contracts/pool-linear/IShareToken.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ERC20.sol";
 import "../silo/SiloHelpers.sol";
 import "@balancer-labs/v2-interfaces/contracts/pool-linear/ISilo.sol";
+import "hardhat/console.sol";
 
 contract MockBaseSilo is IBaseSilo {
     // asset address for which Silo was created
@@ -27,9 +28,6 @@ contract MockBaseSilo is IBaseSilo {
 
     /// @dev asset => AssetStorage
     mapping(address => AssetStorage) private _assetStorage;
-
-    // // solhint-disable-next-line var-name-mixedcase
-    // uint256 private immutable _ASSET_DECIMAL_POINTS;
 
     constructor(address siloAsset) {
         _siloAsset = siloAsset;
@@ -64,6 +62,4 @@ contract MockBaseSilo is IBaseSilo {
 
         _assetStorage[interestBarringAsset] = storageValue;
     }
-
-
 }

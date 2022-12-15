@@ -23,6 +23,7 @@ describe('SiloLinearPool', function () {
     let trader: SignerWithAddress, lp: SignerWithAddress, owner: SignerWithAddress;
     let vault: Vault;
     let pool: LinearPool;
+    let mockSilo: Contract;
     let mainToken: Token, wrappedToken: Token, tokens: TokenList;
 
     before('setup', async () => {
@@ -58,13 +59,16 @@ describe('SiloLinearPool', function () {
     sharedBeforeEach('deploy pool & tokens', async () => {
         mainToken = await Token.create({symbol: 'USDC', decimals: 6});
         
-        const mockSilo = await deploy('MockSilo', {
+        mockSilo = await deploy('MockSilo', {
             args: [mainToken.address],
           });
-
+        
+        
         const wrappedTokenInstance = await deploy('MockShareToken', {
         args: ['sUSDC', 'sUSDC', mockSilo.address, mainToken.address, mainToken.decimals],
         });
+        
+        await wrappedTokenInstance.setTotalSupply(1000000);
 
         wrappedToken = await Token.deployedAt(wrappedTokenInstance.address);
 
@@ -112,4 +116,30 @@ describe('SiloLinearPool', function () {
     });
 
     // Add testing for exchange rates
+    describe('get wrapped token rate', () => {
+        
+        it("verify that the exchange rate function works", async () => {
+            // initalize the asset storage mapping within the Silo for the main token
+            await mockSilo.setAssetStorage(
+                mainToken.address,
+                wrappedToken.instance.address,
+                wrappedToken.instance.address,
+                wrappedToken.instance.address,
+                20000,
+                100,
+                9000
+            );
+
+            // Calculate the expected rate and compare to the getWrappedToken return value
+            const assetStorage = await mockSilo.assetStorage(mainToken.address);
+            // Get the 4th member from the struct 'total deposits'
+            const totalAmount = assetStorage[3];
+
+            const totalShares: number = await wrappedToken.instance.totalSupply();
+
+            const expectedRate: number = (1 * totalAmount) / totalShares;
+
+            expect(await pool.getWrappedTokenRate()).to.equal(fp(expectedRate));
+        }) 
+    });
 })
